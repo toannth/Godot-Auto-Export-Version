@@ -104,6 +104,8 @@ func _enter_tree() -> void:
 		ProjectSettings.set_setting(setting_name, CONFIG_PATH)
 		if not FileAccess.file_exists(CONFIG_PATH):
 			DirAccess.copy_absolute("res://addons/AutoExportVersion/auto_export_version_config_file.gd", CONFIG_PATH)
+	else:
+		CONFIG_PATH = ProjectSettings.get_setting(setting_name)
 	ProjectSettings.add_property_info({ "name": setting_name, "type": TYPE_STRING, "hint": PROPERTY_HINT_SAVE_FILE })
 	ProjectSettings.set_initial_value(setting_name, CONFIG_PATH)
 	
