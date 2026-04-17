@@ -145,13 +145,13 @@ func _tool_menu_print_version() -> void:
 	OS.alert(_CURRENT_VERSION.format({ "version": version }))
 	store_version(version, STORE_LOCATION)
 
-func get_version(features: PackedStringArray, is_debug: bool, path: String, flags: int) -> String:
+func get_version(features: PackedStringArray, is_debug: bool, path: String, flags: int, platform := "") -> String:
 	if not ResourceLoader.exists(CONFIG_PATH, "GDScript"):
 		push_error("Version config file does not exist!")
 		return ""
 	
 	var provider: RefCounted = load(CONFIG_PATH).new()
-	return provider.get_version(features, is_debug, path, flags)
+	return provider.get_version(features, is_debug, path, flags, platform)
 
 class AutoExportVersionExporter extends EditorExportPlugin:
 	var plugin: EditorPlugin
@@ -164,5 +164,5 @@ class AutoExportVersionExporter extends EditorExportPlugin:
 			push_error("No plugin set in AutoExportVersionExporter")
 			return
 		
-		var version: String = plugin.get_version(features, is_debug, path, flags)
+		var version: String = plugin.get_version(features, is_debug, path, flags, get_export_platform().get_os_name())
 		plugin.store_version(version, plugin.STORE_LOCATION)
