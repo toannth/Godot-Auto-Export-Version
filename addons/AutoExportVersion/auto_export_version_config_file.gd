@@ -1,6 +1,6 @@
 extends "res://addons/AutoExportVersion/VersionProvider.gd"
 
-func get_version(features: PackedStringArray, is_debug: bool, path: String, flags: int) -> String:
+func get_version(features: PackedStringArray, is_debug: bool, path: String, flags: int, platform: String) -> String:
 	var version: String = ""
 	
 #	version += get_git_commit_count()
