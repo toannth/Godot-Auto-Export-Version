@@ -4,7 +4,7 @@ extends RefCounted
 ## You can use the arguments to customize your version, for example based on selected platform. [br]
 ## Several utility methods are provided for the most common use cases. You can simply uncomment one
 ## of the lines in this method or combine them in any way.
-func get_version(features: PackedStringArray, is_debug: bool, path: String, flags: int) -> String:
+func get_version(features: PackedStringArray, is_debug: bool, path: String, flags: int, platform: String) -> String:
 	return ""
 
 ## Name of the current git branch                                                               [br]
@@ -129,4 +129,48 @@ func get_export_preset_android_version_code() -> String:
 			return version_code
 	
 	push_error("Failed to fetch version code. version/code in android preset is empty")
+	return ""
+
+## Short version name from an ios export profile                                                  [br]
+## Useful for versions like '1.0.0'                                                             [br]
+## !!! Requires export_presets.cfg to exist.
+func get_export_preset_ios_short_version() -> String:
+	var config: ConfigFile = ConfigFile.new()
+	var err: int = config.load("res://export_presets.cfg")
+	if err != OK:
+		push_error("Cannot open 'res://export_presets.cfg'. Error: %s" % error_string(err))
+		return ""
+	
+	var short_version: String = ""
+	
+	for section in config.get_sections():
+		if not section.ends_with(".options"):
+			continue
+		short_version = str(config.get_value(section, "application/short_version", ""))
+		if not short_version.is_empty():
+			return short_version
+	
+	push_error("Failed to fetch version name. application/short_version in ios preset is empty")
+	return ""
+
+## Version from an ios export profile                                                  [br]
+## Useful for versions like '1.0.0-1'                                                           [br]
+## !!! Requires export_presets.cfg to exist.
+func get_export_preset_ios_version() -> String:
+	var config: ConfigFile = ConfigFile.new()
+	var err: int = config.load("res://export_presets.cfg")
+	if err != OK:
+		push_error("Cannot open 'res://export_presets.cfg'. Error: %s" % error_string(err))
+		return ""
+	
+	var version: String = ""
+	
+	for section in config.get_sections():
+		if not section.ends_with(".options"):
+			continue
+		version = str(config.get_value(section, "application/version", ""))
+		if not version.is_empty():
+			return version
+	
+	push_error("Failed to fetch version code. application/version in ios preset is empty")
 	return ""
