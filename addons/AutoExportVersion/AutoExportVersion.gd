@@ -104,6 +104,10 @@ func _sync_project_settings():
 	var new_config_path: String = ProjectSettings.get_setting("addons/AutoExportVersion/version_config_file")
 	if new_config_path != CONFIG_PATH:
 		if FileAccess.file_exists(CONFIG_PATH) and not FileAccess.file_exists(new_config_path):
+			var cached: Script = ResourceLoader.get_cached_ref(CONFIG_PATH)
+			if cached:
+				cached.take_over_path(new_config_path)
+			
 			DirAccess.rename_absolute(CONFIG_PATH, new_config_path)
 			EditorInterface.get_resource_filesystem().update_file(CONFIG_PATH)
 			EditorInterface.get_resource_filesystem().update_file(new_config_path)
