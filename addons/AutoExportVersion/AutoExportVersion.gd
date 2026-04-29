@@ -130,7 +130,7 @@ func _tool_menu_print_version() -> void:
 	OS.alert(_CURRENT_VERSION.format({ "version": version }))
 	store_version(version, STORE_LOCATION)
 
-func get_version(features: PackedStringArray, is_debug: bool, path: String, flags: int, platform := "") -> String:
+func get_version(features: PackedStringArray, is_debug: bool, path: String, flags: int, platform: String = "") -> String:
 	if not ResourceLoader.exists(CONFIG_PATH, "GDScript"):
 		push_error("Version config file does not exist!")
 		return ""
