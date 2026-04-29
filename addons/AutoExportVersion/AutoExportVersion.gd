@@ -1,5 +1,5 @@
 @tool
-extends EditorPlugin
+extends "ExtendedEditorPlugin.gd"
 
 ## Edit "addons/AutoExportVersion" project settings to configure the plugin
 ## and create version config file.
@@ -82,32 +82,13 @@ func _enter_tree() -> void:
 	add_export_plugin(_exporter)
 	add_tool_menu_item(_TOOL_MENU_ITEM_NAME, _tool_menu_print_version)
 	
-	var setting_name := "addons/AutoExportVersion/version_store_location"
-	if not ProjectSettings.has_setting(setting_name):
-		ProjectSettings.set_setting(setting_name, STORE_LOCATION)
-	ProjectSettings.add_property_info({ "name": setting_name, "type": TYPE_INT, "hint": PROPERTY_HINT_ENUM, "hint_string": "Script,Project Setting" })
-	ProjectSettings.set_initial_value(setting_name, STORE_LOCATION)
+	STORE_LOCATION = define_project_setting("addons/AutoExportVersion/version_store_location", STORE_LOCATION, PROPERTY_HINT_ENUM, "Script,Project Setting")
+	SCRIPT_PATH = define_project_setting("addons/AutoExportVersion/version_file_path", SCRIPT_PATH, PROPERTY_HINT_SAVE_FILE)
+	PROJECT_SETTING_NAME = define_project_setting("addons/AutoExportVersion/version_setting_name", PROJECT_SETTING_NAME)
+	CONFIG_PATH = define_project_setting("addons/AutoExportVersion/version_config_file", CONFIG_PATH, PROPERTY_HINT_SAVE_FILE)
 	
-	setting_name = "addons/AutoExportVersion/version_file_path"
-	if not ProjectSettings.has_setting(setting_name):
-		ProjectSettings.set_setting(setting_name, SCRIPT_PATH)
-	ProjectSettings.add_property_info({ "name": setting_name, "type": TYPE_STRING, "hint": PROPERTY_HINT_SAVE_FILE })
-	ProjectSettings.set_initial_value(setting_name, SCRIPT_PATH)
-	
-	setting_name = "addons/AutoExportVersion/version_setting_name"
-	if not ProjectSettings.has_setting(setting_name):
-		ProjectSettings.set_setting(setting_name, PROJECT_SETTING_NAME)
-	ProjectSettings.set_initial_value(setting_name, PROJECT_SETTING_NAME)
-	
-	setting_name = "addons/AutoExportVersion/version_config_file"
-	if not ProjectSettings.has_setting(setting_name):
-		ProjectSettings.set_setting(setting_name, CONFIG_PATH)
-		if not FileAccess.file_exists(CONFIG_PATH):
-			DirAccess.copy_absolute("res://addons/AutoExportVersion/auto_export_version_config_file.gd", CONFIG_PATH)
-	else:
-		CONFIG_PATH = ProjectSettings.get_setting(setting_name)
-	ProjectSettings.add_property_info({ "name": setting_name, "type": TYPE_STRING, "hint": PROPERTY_HINT_SAVE_FILE })
-	ProjectSettings.set_initial_value(setting_name, CONFIG_PATH)
+	if not FileAccess.file_exists(CONFIG_PATH):
+		DirAccess.copy_absolute("res://addons/AutoExportVersion/auto_export_version_config_file.gd", CONFIG_PATH)
 	
 	_sync_project_settings()
 	ProjectSettings.settings_changed.connect(_sync_project_settings)
@@ -122,7 +103,11 @@ func _sync_project_settings():
 	
 	var new_config_path: String = ProjectSettings.get_setting("addons/AutoExportVersion/version_config_file")
 	if new_config_path != CONFIG_PATH:
-		if FileAccess.file_exists(CONFIG_PATH):
+		if FileAccess.file_exists(CONFIG_PATH) and not FileAccess.file_exists(new_config_path):
+			var cached: Script = ResourceLoader.get_cached_ref(CONFIG_PATH)
+			if cached:
+				cached.take_over_path(new_config_path)
+			
 			DirAccess.rename_absolute(CONFIG_PATH, new_config_path)
 			EditorInterface.get_resource_filesystem().update_file(CONFIG_PATH)
 			EditorInterface.get_resource_filesystem().update_file(new_config_path)
@@ -160,9 +145,7 @@ class AutoExportVersionExporter extends EditorExportPlugin:
 		return "Auto Export Version"
 
 	func _export_begin(features: PackedStringArray, is_debug: bool, path: String, flags: int) -> void:
-		if not plugin:
-			push_error("No plugin set in AutoExportVersionExporter")
-			return
+		assert(plugin, "No plugin set in AutoExportVersionExporter")
 		
 		var version: String = plugin.get_version(features, is_debug, path, flags, get_export_platform().get_os_name())
 		plugin.store_version(version, plugin.STORE_LOCATION)
